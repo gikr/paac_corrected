@@ -18,7 +18,9 @@ class TLabyrinthEmulator(BaseEnvironment):
 
         self.game = make_game(self.randomness, self.reward_location)
         obs_t, r_t, discount_t = self.game.its_showtime()
-        self.observation_shape = T_lab_observation(obs_t).shape
+        obs_t, inf_o = T_lab_observation(obs_t)
+
+        self.observation_shape = obs_t.shape
 
 
     def reset(self):
@@ -27,7 +29,7 @@ class TLabyrinthEmulator(BaseEnvironment):
         
         self.game = make_game(self.randomness, self.reward_location)
         obs_t, r_t, discount_t = self.game.its_showtime()
-        obs = T_lab_observation(obs_t)
+        obs, info = T_lab_observation(obs_t)
         
         return obs, None
 
@@ -43,7 +45,7 @@ class TLabyrinthEmulator(BaseEnvironment):
             obs, reward, discount = self.game.play(act[0])
         termination = 1-discount
         
-        observation = T_lab_observation(obs)
+        observation, info = T_lab_observation(obs)
         ls = []
         #if len(str(self.id)) == 1:
         data = [[],[]]
