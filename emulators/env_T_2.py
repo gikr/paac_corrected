@@ -192,17 +192,21 @@ def main(argv=()):
 
 def print_obs(obs):
     matr = []
-    obs, info = obs
-    obs = obs.tolist()
-    print("info", info)
-    print("end info")
-    print("obs", obs)
-    print(type(info), type(obs))
-    print("end obs")
+    #obs, info = obs
+    #obs = obs.tolist()
+    #print("info", info)
+    #print("end info")
+    #print("obs", obs)
+    #print(type(info), type(obs))
+    #print("end obs")
     #a = np.array(pd.DataFrame.from_dict(info))
     #print(a)
     #matr.append(1*info['A']) #,1*info['H'], info['@'], info['#'], info['L'], info['R'] )
     #matr.append(1*info['H'])
+    matr, none_var = T_lab_observation(obs)
+    #matr = matr.tolist()
+
+    '''
     keys = list(info.keys())
     for i in range(len(keys)):
        key = keys[i]
@@ -210,27 +214,21 @@ def print_obs(obs):
           print("I am here", key)
           matr.append(1*info[key])
     matr = np.array(matr)
-
-
-    print(matr, type(matr))
-    print(matr.shape)
-    for i in range(len(obs)):
-        obs[i] = ''.join([chr(ch) for ch in obs[i]])
-        print(obs[i])
-
+    '''
 
 def dummy_episode():
     import numpy as np
     game = make_game(False, 0)
-    print(game.game_over )
+    print(game.game_over)
     action_keys = ['up', 'down', 'left', 'right', 'noop']
     obs_t, r_t, discount_t = game.its_showtime()
     for t in range(1,101):
         a_t = None
-
+        print_obs(obs_t)
         while a_t not in action_keys:
             a_t = input("Choose one of the following actions: {}:\n".format(action_keys))
         obs_t, r_t, discount_t = game.play(action_keys.index(a_t))
+
         print('r =', r_t, 'gamma = ', discount_t)
         #obs_t, r_t = game.play(action_keys.index(a_t))
 
@@ -239,16 +237,31 @@ def dummy_episode():
 
     print('Done!')
 
+
+ #for i in range(len(keys)):
+    #    key = keys[i]
+    #    if all([key != '.', key != ' ']):
+    #        matr_obs.append(1*info[key])
+    #        keys_list.append(key)
+    #matr_obs = np.array(matr_obs)
+    #print(keys_list)
+    #obs = obs.tolist()
+    #for i in range(len(obs)):
+    #    obs[i] = ''.join([chr(ch) for ch in obs[i]])
+    #    print(obs[i])
+
 def T_lab_observation(obs_t):
-	matr_obs = []
-	obs,info = obs_t
-	keys = list(info.keys())
-	for i in range(len(keys)):
-		key = keys[i]
-		if all([key != '.', key != ' ']):
-			matr_obs.append(1*info[key])
-	matr_obs = np.array(matr_obs)
-	return matr_obs
+    import operator
+
+    obs,info = obs_t
+    info = sorted(info.items(), key=operator.itemgetter(0))
+    #print("sorted_x", info)
+    keys = [info[i][0] for i in range(len(info))]
+    matrixes_x = [1*info[i][1] for i in range(len(info))]
+    matrixes_x = np.asarray(matrixes_x)
+    #print("obs_ttttttt22222", keys, matrixes_x)
+    #print("obs_ttttttt22222", matrixes_x.shape)
+    return matrixes_x, None    # i need any information about env, rather than just 0,1. so i am returning dict too
 
 
 def T_lab_actions():
@@ -258,8 +271,8 @@ def T_lab_actions():
 
 if __name__ == '__main__':
 
-  #dummy_episode()
-  main(sys.argv)
+  dummy_episode()
+  #main(sys.argv)
 
 
 
