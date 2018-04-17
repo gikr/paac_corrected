@@ -1,9 +1,11 @@
+
 import numpy as np
 import itertools
 import logging
 import torch.nn.functional as F
 import time
 
+ds = 0
 def model_evaluation(eval_function):
     def wrapper(network, *args, **kwargs):
         prev_mode = network.training
@@ -81,8 +83,21 @@ def visual_eval(network, env_creator, greedy=False, is_recurrent=False,
     action_codes = np.eye(env_creator.num_actions)
 
     def unsqueeze(emulator_outputs):
+        global ds
         outputs = list(emulator_outputs)
         state, info = outputs[0], outputs[-1]
+        keys_list = np.asarray([ord(' '), ord('#'), ord('.'), ord('@'), ord('A'), ord('H'), ord('L'), ord('R')])
+        keys_list_y = np.expand_dims(np.expand_dims(keys_list, axis=1), axis=1)
+        sum_all = state*keys_list_y
+        sum_res = sum(sum_all)
+        obs = sum_res
+        obs = obs.tolist()
+        for i in range(len(obs)):
+            obs[i] = ''.join([chr(ch) for ch in obs[i]])
+            print(obs[i])
+        print('\n')
+        ds += 1
+        print(ds)
         if state is not None:
             outputs[0] = state[np.newaxis]
         if info is not None:
@@ -131,3 +146,4 @@ def choose_action(network, states, infos, **kwargs):
     else:
         acts = a_probs.max(1, keepdim=True)[1]
     return acts, rnn_state
+
