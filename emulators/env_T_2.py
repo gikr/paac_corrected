@@ -47,12 +47,13 @@ GOAL_CHR2 = 'R'
 HINT_CHR = 'H'
 
 MOVEMENT_REWARD = -0.0001
+
 #GOAL_REWARD = 1
 #HINT_REWARD = 20
 
 
 
-def make_game(randomness, reward_location):
+def make_game(randomness, reward_location, enlarge_game_art):
   global LEFT_REWARD
   global RIGHT_REWARD
   if reward_location is None: #in random case reward location should be None
@@ -62,17 +63,29 @@ def make_game(randomness, reward_location):
       else:
          reward_location = 0
 
+  GAME_ART_COPY = GAME_ART[reward_location]
+
+  if enlarge_game_art == True:
+      GAME_ART_COPY.insert(2,'@@@# #@@@')
+
+  game = GAME_ART_COPY
+  #print(game)
+
   scrolly_info = prefab_drapes.Scrolly.PatternInfo(
-      GAME_ART[reward_location], STAR_ART, board_northwest_corner_mark='+',
+      GAME_ART_COPY, STAR_ART, board_northwest_corner_mark='+',
       what_lies_beneath=MAZES_WHAT_LIES_BENEATH[0],
        )
   if reward_location == 0: #0 - reward located on the right side, 1 - left side
-     LEFT_REWARD = -0.99
-     RIGHT_REWARD = 1.01
+     LEFT_REWARD = -1.0
+     RIGHT_REWARD = 1.0
   else:
-     LEFT_REWARD = 1.01
-     RIGHT_REWARD = -0.99
-  game = GAME_ART[reward_location]
+     LEFT_REWARD = 1.0
+     RIGHT_REWARD = -1.0
+
+
+
+
+
   player_position = scrolly_info.virtual_position('A')
   left_goal_kwarg = scrolly_info.kwargs('L')
   right_goal_kwarg = scrolly_info.kwargs('R')
@@ -97,8 +110,8 @@ MAZES_WHAT_LIES_BENEATH = [  #что показывать вместо "+"
 ]
 
 STAR_ART = ['         ',
-	    '    .    ',
-	    '         ',
+	        '    .    ',
+	        '         ',
             '    .    ']   #схема того, какого размера часть хотим видеть
 
 
@@ -114,32 +127,45 @@ class AgentSprite(prefab_sprites.MazeWalker):
 
   def update(self, actions, board, layers, backdrop, things, the_plot):
     del backdrop  # Unused.
-
-
+    rows, cols = self.position
 
     # Apply motion commands.
+    #print(rows, cols, layers['#'][rows-1, cols])
     if actions == 0:    # walk upward?
       self._north(board, the_plot)
-      the_plot.add_reward(MOVEMENT_REWARD)
+      the_plot.add_reward(-0.01)
 
-    elif actions == 1:  # walk downward?
-      self._south(board, the_plot)
-      the_plot.add_reward(MOVEMENT_REWARD)
+   # elif actions == 1:  # walk downward?
+   #   self._south(board, the_plot)
+   #   the_plot.add_reward(-0.1)
 
-    elif actions == 2:  # walk leftward?
+    elif actions == 1:  # walk leftward?
       self._west(board, the_plot)
-      the_plot.add_reward(MOVEMENT_REWARD)
-     # if layers['H'][things['A'].position]  == True:   #вознаграждение за пребывание в подсказке
+      if (layers['#'][rows, cols - 1] or layers['@'][rows, cols - 1]):
+          the_plot.add_reward(-0.05)
+      else:
+          the_plot.add_reward(-0.01)
+
+
+          # if layers['H'][things['A'].position]  == True:   #вознаграждение за пребывание в подсказке
      #    the_plot.add_reward(HINT_REWARD)
      # else: the_plot.add_reward(MOVEMENT_REWARD)
 
-    elif actions == 3:  # walk rightward?
+    elif actions == 2:  # walk rightward?
       self._east(board, the_plot)
-      the_plot.add_reward(MOVEMENT_REWARD)
+      if (layers['#'][rows, cols + 1] or layers['@'][rows, cols + 1]):
+          the_plot.add_reward(-0.05)
+      else:
+          the_plot.add_reward(-0.01)
 
-    elif actions == 4:  # is the player doing nothing?
+    elif actions == 3:  # is the player doing nothing?
       self._stay(board, the_plot)
-      the_plot.add_reward(MOVEMENT_REWARD)
+      the_plot.add_reward(-0.05)
+
+    #global prev_position
+    #prev_position.append(self.position)
+
+
 
     if layers['L'][things['A'].position] == True:
       the_plot.add_reward(LEFT_REWARD)
@@ -157,14 +183,14 @@ class MazeDrape(prefab_drapes.Scrolly):
 																		#print(actions) - lovely Nones
     if actions == 0:    # is the player going upward?
       self._north(the_plot)
-    elif actions == 1:  # is the player going downward?
-      self._south(the_plot)
-    elif actions == 2:  # is the player going leftward?
+   # elif actions == 1:  # is the player going downward?
+   #   self._south(the_plot)
+    elif actions == 1:  # is the player going leftward?
       self._west(the_plot)
 
-    elif actions == 3:  # is the player going rightward?
+    elif actions == 2:  # is the player going rightward?
       self._east(the_plot)
-    elif actions == 4:  # is the player doing nothing?
+    elif actions == 3:  # is the player doing nothing?
       self._stay(the_plot)
 
 
@@ -192,8 +218,8 @@ def main(argv=()):
 
 def print_obs(obs):
     matr = []
-    #obs, info = obs
-    #obs = obs.tolist()
+    obs, info = obs
+    obs = obs.tolist()
     #print("info", info)
     #print("end info")
     #print("obs", obs)
@@ -203,24 +229,20 @@ def print_obs(obs):
     #print(a)
     #matr.append(1*info['A']) #,1*info['H'], info['@'], info['#'], info['L'], info['R'] )
     #matr.append(1*info['H'])
-    matr, none_var = T_lab_observation(obs)
+    #matr, none_var = T_lab_observation(obs)
     #matr = matr.tolist()
 
-    '''
-    keys = list(info.keys())
-    for i in range(len(keys)):
-       key = keys[i]
-       if all([key != '.', key != ' ']):
-          print("I am here", key)
-          matr.append(1*info[key])
-    matr = np.array(matr)
-    '''
+
+    for i in range(len(obs)):
+        obs[i] = ''.join([chr(ch) for ch in obs[i]])
+        print(obs[i])
+
 
 def dummy_episode():
     import numpy as np
-    game = make_game(False, 0)
-    print(game.game_over)
-    action_keys = ['up', 'down', 'left', 'right', 'noop']
+    game = make_game(False, 0, False)
+
+    action_keys = ['up', 'left', 'right', 'noop']
     obs_t, r_t, discount_t = game.its_showtime()
     for t in range(1,101):
         a_t = None
@@ -265,13 +287,12 @@ def T_lab_observation(obs_t):
 
 
 def T_lab_actions():
-	action_keys = [0, 1, 2, 3, 4]
+	action_keys = [0, 1, 2, 3]
 	return(np.ndarray(action_keys))
 
 
 if __name__ == '__main__':
-
-  dummy_episode()
+    dummy_episode()
   #main(sys.argv)
 
 
