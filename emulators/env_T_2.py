@@ -42,8 +42,6 @@ GAME_ART = [
 ]
 
 chrs = ['#','@']
-GAME1_ART = [[random.choice(chrs)],
-            []]
 
 AGENT_CHR = 'A'
 GOAL_CHR1 = 'L'
@@ -74,7 +72,7 @@ def make_game(randomness, reward_location, enlarge_game_art):
 
 
   scrolly_info = prefab_drapes.Scrolly.PatternInfo(
-      GAME_ART_COPY, STAR_ART, board_northwest_corner_mark='+',
+      game, STAR_ART, board_northwest_corner_mark='+',
       what_lies_beneath=MAZES_WHAT_LIES_BENEATH[0],
        )
   if reward_location == 0: #0 - reward located on the right side, 1 - left side
@@ -210,8 +208,8 @@ def main(argv=()):
 
   # Make a CursesUi to play it with.
   ui = human_ui.CursesUi(
-      keys_to_actions={curses.KEY_UP: 0, curses.KEY_DOWN:1,
-                       curses.KEY_LEFT: 2, curses.KEY_RIGHT: 3,
+      keys_to_actions={curses.KEY_UP: 0,
+                       curses.KEY_LEFT: 1, curses.KEY_RIGHT: 2,
                        -1: 4}, #curses.KEY_DOWN: not using
       delay=200)
 
