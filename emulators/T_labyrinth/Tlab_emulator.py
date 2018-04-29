@@ -8,15 +8,15 @@ import operator
 
 class TLabyrinthEmulator(BaseEnvironment):
     def __init__(self, actor_id, args):
-        self.randomness = False
-        self.reward_location = 0
-        self.game = make_game(self.randomness, self.reward_location)
+        self.randomness = True
+        self.reward_location = None
+
         self.legal_actions = T_lab_actions().shape
         #print(self.legal_actions)
         self.noop = 'pass'
         self.id = actor_id
 
-        self.game = make_game(self.randomness, self.reward_location)
+        self.game = make_game(self.randomness, self.reward_location, False)
         obs_t, r_t, discount_t = self.game.its_showtime()
         obs_t, inf_o = T_lab_observation(obs_t)
 
@@ -27,7 +27,7 @@ class TLabyrinthEmulator(BaseEnvironment):
         """Starts a new episode and returns its initial state"""
         matr_obs = []
         
-        self.game = make_game(self.randomness, self.reward_location)
+        self.game = make_game(self.randomness, self.reward_location, False)
         obs_t, r_t, discount_t = self.game.its_showtime()
         obs, info = T_lab_observation(obs_t)
         
