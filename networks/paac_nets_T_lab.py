@@ -10,13 +10,15 @@ from collections import namedtuple
 
 def preprocess_images(s_numpy, t_types, volatile=False):
     # pytorch conv layers expect inputs of shape (batch, C,H,W)
-    s_numpy = (np.ascontiguousarray(s_numpy, dtype=np.float32)/127.5) - 1. #[0,255] to [-1.,1.]
+    #print(s_numpy)
+    s_numpy = (np.ascontiguousarray(s_numpy, dtype=np.float32)*10.0)  #[0,255] to [-1.,1.]
+    #print(s_numpy)
     return Variable(t_types.FloatTensor(s_numpy), volatile=volatile)
 
-def old_preprocess_images(s_numpy, t_types, volatile=False):
+#def old_preprocess_images(s_numpy, t_types, volatile=False):
     # pytorch conv layers expect inputs of shape (batch, C,H,W)
-    s_numpy = np.ascontiguousarray(s_numpy, dtype=np.float32)/255. #[0,255] to [0.,1.]
-    return Variable(t_types.FloatTensor(s_numpy), volatile=volatile)
+#    s_numpy = np.ascontiguousarray(s_numpy, dtype=np.float32)/255. #[0,255] to [0.,1.]
+#    return Variable(t_types.FloatTensor(s_numpy), volatile=volatile)
 
 
 class TlabFF(nn.Module):
