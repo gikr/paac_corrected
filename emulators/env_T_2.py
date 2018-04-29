@@ -7,6 +7,7 @@ import sys
 import numpy as np
 import pandas as pd
 import time
+import random
 
 from pycolab import ascii_art
 from pycolab import human_ui
@@ -40,13 +41,16 @@ GAME_ART = [
      '#########']
 ]
 
+chrs = ['#','@']
+GAME1_ART = [[random.choice(chrs)],
+            []]
 
 AGENT_CHR = 'A'
 GOAL_CHR1 = 'L'
 GOAL_CHR2 = 'R'
 HINT_CHR = 'H'
 
-MOVEMENT_REWARD = -0.0001
+#MOVEMENT_REWARD = -0.0001
 
 #GOAL_REWARD = 1
 #HINT_REWARD = 20
@@ -54,22 +58,20 @@ MOVEMENT_REWARD = -0.0001
 
 
 def make_game(randomness, reward_location, enlarge_game_art):
+
   global LEFT_REWARD
   global RIGHT_REWARD
   if reward_location is None: #in random case reward location should be None
       if randomness:
           # If the agent is in testing mode, randomly choose a Goal location.
+
          reward_location = np.random.choice([0, 1])
+
       else:
          reward_location = 0
 
-  GAME_ART_COPY = GAME_ART[reward_location]
+  game = GAME_ART[reward_location]
 
-  if enlarge_game_art == True:
-      GAME_ART_COPY.insert(2,'@@@# #@@@')
-
-  game = GAME_ART_COPY
-  #print(game)
 
   scrolly_info = prefab_drapes.Scrolly.PatternInfo(
       GAME_ART_COPY, STAR_ART, board_northwest_corner_mark='+',
@@ -135,13 +137,13 @@ class AgentSprite(prefab_sprites.MazeWalker):
       self._north(board, the_plot)
       the_plot.add_reward(-0.01)
 
-   # elif actions == 1:  # walk downward?
+   # elif actions == 4:  # walk downward?
    #   self._south(board, the_plot)
    #   the_plot.add_reward(-0.1)
 
     elif actions == 1:  # walk leftward?
       self._west(board, the_plot)
-      if (layers['#'][rows, cols - 1] or layers['@'][rows, cols - 1]):
+      if (layers['#'][rows, cols - 1] or layers['@'][rows, cols - 1] or layers['H'][rows, cols - 1]):
           the_plot.add_reward(-0.05)
       else:
           the_plot.add_reward(-0.01)
@@ -153,7 +155,7 @@ class AgentSprite(prefab_sprites.MazeWalker):
 
     elif actions == 2:  # walk rightward?
       self._east(board, the_plot)
-      if (layers['#'][rows, cols + 1] or layers['@'][rows, cols + 1]):
+      if (layers['#'][rows, cols + 1] or layers['@'][rows, cols + 1] or layers['H'][rows, cols + 1]):
           the_plot.add_reward(-0.05)
       else:
           the_plot.add_reward(-0.01)
@@ -183,7 +185,7 @@ class MazeDrape(prefab_drapes.Scrolly):
 																		#print(actions) - lovely Nones
     if actions == 0:    # is the player going upward?
       self._north(the_plot)
-   # elif actions == 1:  # is the player going downward?
+   # elif actions == 4:  # is the player going downward?
    #   self._south(the_plot)
     elif actions == 1:  # is the player going leftward?
       self._west(the_plot)
@@ -240,7 +242,7 @@ def print_obs(obs):
 
 def dummy_episode():
     import numpy as np
-    game = make_game(False, 0, False)
+    game = make_game(True, None, False)
 
     action_keys = ['up', 'left', 'right', 'noop']
     obs_t, r_t, discount_t = game.its_showtime()
@@ -292,6 +294,10 @@ def T_lab_actions():
 
 
 if __name__ == '__main__':
+    #matrix = ['#########',
+    #          '#L     R#']
+    #matrix += [''.join([random.choice(['#', '@']) if i != 4  else ' ' for i in range(9)   ]) for j in range(2)]
+    #print(np.asarray(matrix))
     dummy_episode()
   #main(sys.argv)
 
