@@ -54,11 +54,25 @@ HINT_CHR = 'H'
 #HINT_REWARD = 20
 
 
+def game_art_function(width, length, reward_location):
+    matrix = ['#########',
+              '#L     R#']
+    matrix += [''.join([random.choice(['#', '@']) if i != int(width/2)  else ' ' for i in range(width)]) for j in range(length-2)]
+    matrix += ['+@@# #@@#']
+    matrix += ['#@@# #@@#']
+    if reward_location == 0:
+        matrix += ['#@@# H@@#']
+    else:
+        matrix += ['#@@H #@@#']
+    matrix += ['####A####']
+    return np.asarray(matrix)
+
+
+
 
 def make_game(randomness, reward_location, enlarge_game_art):
 
-  global LEFT_REWARD
-  global RIGHT_REWARD
+
   if reward_location is None: #in random case reward location should be None
       if randomness:
           # If the agent is in testing mode, randomly choose a Goal location.
@@ -68,7 +82,7 @@ def make_game(randomness, reward_location, enlarge_game_art):
       else:
          reward_location = 0
 
-  game = GAME_ART[reward_location]
+  game = game_art_function(9, 10, reward_location)
 
 
   scrolly_info = prefab_drapes.Scrolly.PatternInfo(
@@ -97,7 +111,7 @@ def make_game(randomness, reward_location, enlarge_game_art):
 
   return ascii_art.ascii_art_to_game(
       STAR_ART, what_lies_beneath=' ',
-      sprites={'A': ascii_art.Partial(AgentSprite, player_position)},
+      sprites={'A': ascii_art.Partial(AgentSprite, player_position, LR = LEFT_REWARD, RR = RIGHT_REWARD)},
       drapes={'#': ascii_art.Partial(MazeDrape, **wall_1_kwargs),
               '@': ascii_art.Partial(MazeDrape, **wall_2_kwargs),
                'L': ascii_art.Partial(MazeDrape, **left_goal_kwarg),
@@ -119,11 +133,13 @@ STAR_ART = ['         ',
 
 class AgentSprite(prefab_sprites.MazeWalker):
 
-  def __init__(self, corner, position, character, virtual_position):
+  def __init__(self, corner, position, character, virtual_position, LR, RR):
     """Inform superclass that we can't walk through walls."""
     super(AgentSprite, self).__init__(
         corner, position, character, egocentric_scroller=True, impassable={'#', 'H','@'})
     self._teleport(virtual_position)
+    self.LR = LR
+    self.RR = RR
 
   def update(self, actions, board, layers, backdrop, things, the_plot):
     del backdrop  # Unused.
@@ -168,11 +184,11 @@ class AgentSprite(prefab_sprites.MazeWalker):
 
 
     if layers['L'][things['A'].position] == True:
-      the_plot.add_reward(LEFT_REWARD)
+      the_plot.add_reward(self.LR)
       the_plot.terminate_episode()
 
     if layers['R'][things['A'].position] == True:
-      the_plot.add_reward(RIGHT_REWARD)
+      the_plot.add_reward(self.RR)
       the_plot.terminate_episode()
 
   #the_plot.terminate_episode()
@@ -291,11 +307,11 @@ def T_lab_actions():
 	return(np.ndarray(action_keys))
 
 
+
+
+
 if __name__ == '__main__':
-    #matrix = ['#########',
-    #          '#L     R#']
-    #matrix += [''.join([random.choice(['#', '@']) if i != 4  else ' ' for i in range(9)   ]) for j in range(2)]
-    #print(np.asarray(matrix))
+    
     dummy_episode()
   #main(sys.argv)
 
