@@ -11,7 +11,7 @@ class TLabyrinthEmulator(BaseEnvironment):
         self.randomness = True
         self.reward_location = None
 
-        self.legal_actions = T_lab_actions().shape
+        self.legal_actions = T_lab_actions()
         #print(self.legal_actions)
         self.noop = 'pass'
         self.id = actor_id
