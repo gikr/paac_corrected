@@ -84,7 +84,7 @@ def main(args):
         batch_env.start_workers()
         learner = PAACLearner(network_creator, batch_env, args)
         learner.set_eval_function(eval_network,
-                                  learner.network, env_creator, 10, learner.use_rnn) # args to eval_network
+                                  learner.network, env_creator, 50, learner.use_rnn) # args to eval_network
         learner.train()
     finally:
         batch_env.close()
@@ -166,7 +166,7 @@ def add_paac_args(parser, framework):
     parser.add_argument('--arch', choices=net_choices, help="Which network architecture to train"+show_default,
                         dest="arch")
 
-    parser.add_argument('--loss_scale', default=1., dest='loss_scaling', type=float,
+    parser.add_argument('--loss_scale', default=5., dest='loss_scaling', type=float,
                         help='Scales loss according to a given value'+show_default )
     parser.add_argument('--critic_coef', default=0.25, dest='critic_coef', type=float,
                         help='Weight of the critic loss in the total loss'+show_default)
