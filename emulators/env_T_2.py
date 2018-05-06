@@ -304,7 +304,7 @@ def T_lab_observation(obs_t):
 
 def T_lab_actions():
 	action_keys = [0, 1, 2, 3]
-	return(np.ndarray(action_keys))
+	return action_keys
 
 
 
