@@ -11,8 +11,7 @@ from collections import namedtuple
 def preprocess_images(s_numpy, t_types, volatile=False):
     # pytorch conv layers expect inputs of shape (batch, C,H,W)
     #print(s_numpy)
-    s_numpy = (np.ascontiguousarray(s_numpy, dtype=np.float32)*10.0)  #[0,255] to [-1.,1.]
-    #print(s_numpy)
+    s_numpy = np.ascontiguousarray(s_numpy, dtype=np.float32)  #[0,255] to [-1.,1.]
     return Variable(t_types.FloatTensor(s_numpy), volatile=volatile)
 
 #def old_preprocess_images(s_numpy, t_types, volatile=False):
@@ -79,8 +78,8 @@ class TlabLSTM(nn.Module):
 
     def _create_network(self):
         C,H,W = self._obs_shape
-        self.conv1 = nn.Conv2d(C, 12, (2,2), stride=1)
-        self.conv2 = nn.Conv2d(12, 24, (2,2), stride=1)
+        self.conv1 = nn.Conv2d(C, 16, (3,3), stride=1, padding=1)
+        self.conv2 = nn.Conv2d(16, 32, (3,3), stride=1, padding=1)
 
         convs = [self.conv1, self.conv2]
         C_out, H_out, W_out = calc_output_shape((C, H, W), convs)

@@ -43,6 +43,7 @@ def stats_eval(network, batch_emulator, greedy=False, is_recurrent=False,
     states, infos = batch_emulator.reset_all()
 
     for t in itertools.count():
+        #print('----- step#{} -----'.format(t))
         acts, net_state = choose_action(network, states, infos, **extra_inputs)
         extra_inputs['net_state'] = net_state
         acts_one_hot = action_codes[acts.data.cpu().view(-1).numpy(),:]
@@ -83,21 +84,9 @@ def visual_eval(network, env_creator, greedy=False, is_recurrent=False,
     action_codes = np.eye(env_creator.num_actions)
 
     def unsqueeze(emulator_outputs):
-        global ds
         outputs = list(emulator_outputs)
         state, info = outputs[0], outputs[-1]
-        keys_list = np.asarray([ord(' '), ord('#'), ord('.'), ord('@'), ord('A'), ord('H'), ord('L'), ord('R')])
-        keys_list_y = np.expand_dims(np.expand_dims(keys_list, axis=1), axis=1)
-        sum_all = state*keys_list_y
-        sum_res = sum(sum_all)
-        obs = sum_res
-        obs = obs.tolist()
-        for i in range(len(obs)):
-            obs[i] = ''.join([chr(ch) for ch in obs[i]])
-            print(obs[i])
-        print('\n')
-        ds += 1
-        print(ds)
+
         if state is not None:
             outputs[0] = state[np.newaxis]
         if info is not None:
@@ -112,19 +101,20 @@ def visual_eval(network, env_creator, greedy=False, is_recurrent=False,
             states, infos = unsqueeze(emulator.reset())
             total_r = 0
             for t in itertools.count():
+                if verbose > 0:
+                    print("\nstep#{}".format(t+1))
                 acts, net_state = choose_action(network, states, infos, **extra_inputs)
                 extra_inputs['net_state'] = net_state
                 act = acts.data.cpu().view(-1).numpy()[0]
 
                 states, reward, is_done, infos =  unsqueeze(emulator.next(action_codes[act]))
-                if verbose > 0:
-                    print("step#{} a_t={} r_t={}\r".format(t+1, act, reward), end="", flush=True)
+
                 total_r += reward
                 if delay: time.sleep(delay)
                 if is_done: break
 
             if verbose > 0:
-                print('Episode#{} num_steps={} total_reward={}'.format(episode + 1, t + 1, total_r))
+                print('Episode#{} num_steps={} total_reward={}\n'.format(episode + 1, t + 1, total_r))
             episode_rewards.append(total_r)
             episode_steps.append(t + 1)
         finally:
@@ -147,3 +137,17 @@ def choose_action(network, states, infos, **kwargs):
         acts = a_probs.max(1, keepdim=True)[1]
     return acts, rnn_state
 
+
+
+def T_lab_observation(obs_t):
+    import operator
+
+    obs,info = obs_t
+    info = sorted(info.items(), key=operator.itemgetter(0))
+    #print("sorted_x", info)
+    keys = [info[i][0] for i in range(len(info))]
+    matrixes_x = [1*info[i][1] for i in range(len(info))]
+    matrixes_x = np.asarray(matrixes_x)
+    #print("obs_ttttttt22222", keys, matrixes_x)
+    #print("obs_ttttttt22222", matrixes_x.shape)
+    return matrixes_x, None    # i need any information about env, rather than just 0,1. so i am returning dict too
