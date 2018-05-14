@@ -54,8 +54,25 @@ HINT_CHR = 'H'
 #HINT_REWARD = 20
 
 
+def game_art_function(width, length, reward_location):
+    matrix = ['#########',
+              '#L     R#']
+    matrix += [''.join([random.choice(['#', '@']) if i != int(width/2)  else ' ' for i in range(width)]) for j in range(length-4)]
+    matrix += ['#@@# #@@#']
+    matrix += ['+@@# #@@#']
+    matrix += ['#@@# #@@#']
+    if reward_location == 0:
+        matrix += ['#@@# H@@#']
+    else:
+        matrix += ['#@@H #@@#']
+    matrix += ['####A####']
+    return np.asarray(matrix)
 
-def make_game(randomness, reward_location, enlarge_game_art):
+
+
+
+def make_game(randomness, reward_location, length_lab):
+
 
   if reward_location is None: #in random case reward location should be None
       if randomness:
@@ -65,10 +82,14 @@ def make_game(randomness, reward_location, enlarge_game_art):
 
       else:
          reward_location = 0
+  
 
-  game = GAME_ART[reward_location]
+	  
+	  
+  width_lab = 9
+  game = game_art_function(width_lab, length_lab, reward_location)
 
-
+  
   scrolly_info = prefab_drapes.Scrolly.PatternInfo(
       game, STAR_ART, board_northwest_corner_mark='+',
       what_lies_beneath=MAZES_WHAT_LIES_BENEATH[0],
@@ -79,6 +100,10 @@ def make_game(randomness, reward_location, enlarge_game_art):
   else:
      LEFT_REWARD = 1.0
      RIGHT_REWARD = -1.0
+
+
+
+
 
   player_position = scrolly_info.virtual_position('A')
   left_goal_kwarg = scrolly_info.kwargs('L')
@@ -91,7 +116,7 @@ def make_game(randomness, reward_location, enlarge_game_art):
 
   return ascii_art.ascii_art_to_game(
       STAR_ART, what_lies_beneath=' ',
-      sprites={'A': ascii_art.Partial(AgentSprite, player_position, left_r=LEFT_REWARD, right_r=RIGHT_REWARD)},
+      sprites={'A': ascii_art.Partial(AgentSprite, player_position, LR = LEFT_REWARD, RR = RIGHT_REWARD)},
       drapes={'#': ascii_art.Partial(MazeDrape, **wall_1_kwargs),
               '@': ascii_art.Partial(MazeDrape, **wall_2_kwargs),
                'L': ascii_art.Partial(MazeDrape, **left_goal_kwarg),
@@ -113,15 +138,13 @@ STAR_ART = ['         ',
 
 class AgentSprite(prefab_sprites.MazeWalker):
 
-  def __init__(self, corner, position, character, virtual_position, left_r=None, right_r=None):
+  def __init__(self, corner, position, character, virtual_position, LR, RR):
     """Inform superclass that we can't walk through walls."""
-    self.left_r = left_r
-    self.right_r = right_r
-
     super(AgentSprite, self).__init__(
         corner, position, character, egocentric_scroller=True, impassable={'#', 'H','@'})
     self._teleport(virtual_position)
-
+    self.LR = LR
+    self.RR = RR
 
   def update(self, actions, board, layers, backdrop, things, the_plot):
     del backdrop  # Unused.
@@ -163,12 +186,14 @@ class AgentSprite(prefab_sprites.MazeWalker):
     #global prev_position
     #prev_position.append(self.position)
 
+
+
     if layers['L'][things['A'].position] == True:
-      the_plot.add_reward(self.left_r)
+      the_plot.add_reward(self.LR)
       the_plot.terminate_episode()
 
     if layers['R'][things['A'].position] == True:
-      the_plot.add_reward(self.right_r)
+      the_plot.add_reward(self.RR)
       the_plot.terminate_episode()
 
   #the_plot.terminate_episode()
@@ -239,16 +264,14 @@ def dummy_episode():
     game = make_game(True, None, False)
 
     action_keys = ['up', 'left', 'right', 'noop']
-
     obs_t, r_t, discount_t = game.its_showtime()
-    total_r = r_t if r_t else 0.
     for t in range(1,101):
         a_t = None
         print_obs(obs_t)
         while a_t not in action_keys:
             a_t = input("Choose one of the following actions: {}:\n".format(action_keys))
         obs_t, r_t, discount_t = game.play(action_keys.index(a_t))
-        total_r += r_t
+
         print('r =', r_t, 'gamma = ', discount_t)
         #obs_t, r_t = game.play(action_keys.index(a_t))
 
@@ -256,7 +279,6 @@ def dummy_episode():
         print('===========  Step #{}  ==========:'.format(t))
 
     print('Done!')
-    print('total_reward={}, num_steps={}'.format(total_r, t))
 
 
  #for i in range(len(keys)):
@@ -290,11 +312,11 @@ def T_lab_actions():
 	return action_keys
 
 
+
+
+
 if __name__ == '__main__':
-    #matrix = ['#########',
-    #          '#L     R#']
-    #matrix += [''.join([random.choice(['#', '@']) if i != 4  else ' ' for i in range(9)   ]) for j in range(2)]
-    #print(np.asarray(matrix))
+    
     dummy_episode()
   #main(sys.argv)
 
