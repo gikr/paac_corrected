@@ -60,15 +60,16 @@ class TLabyrinthEmulator(BaseEnvironment):
         #if data[0]==[4]: #write to file
             #print(data)
         #print(reward, termination)
-
-        if termination == True:
-            self.rewards.append(reward)
-            if len(self.rewards) == 51:
-                self.rewards = self.rewards[1:]
-                print(self.rewards)
-                if len(np.where(np.array(self.rewards) > 0)) >= 45:
-                    print(self.rewards)
-                    self.length = self.length + 5
+         
+	#for active learning
+        #if termination == True: 
+        #    self.rewards.append(reward)
+        #    if len(self.rewards) == 51:
+                #self.rewards = self.rewards[1:]
+        #        print(self.rewards)
+        #        if len(np.where(np.array(self.rewards) > 0)) >= 45:
+                    #print(self.rewards)
+        #            self.length = self.length + 5
                     #self.enlarge = True
         #print(self.rewards)
         return observation, reward, termination, None
