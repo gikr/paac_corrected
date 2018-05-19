@@ -1,38 +1,38 @@
-from ..env_T_2 import make_game, T_lab_observation, T_lab_actions
+from ..env_T_2 import make_game, T_lab_observation, T_lab_actions, print_obs
 
 from ..environment import BaseEnvironment
 
 import numpy as np
 import operator
 
+def convert_obs(obs):
+    obs, info = obs
+    keys = sorted(info.keys())
+    state = np.stack([info[k] for k in keys])
+    return state.astype(np.uint8)
 
 class TLabyrinthEmulator(BaseEnvironment):
     def __init__(self, actor_id, args):
         self.randomness = True
-        self.reward_location = None
-        self.length = 9
-        self.legal_actions = T_lab_actions()
+        self.reward_location = np.random.choice([0,1]) #0 if np.random.rand() < 0.5 else 1
+        self.visualize = getattr(args,'visualize', False)
+        self.legal_actions = [0, 1, 2, 3] #['up', 'left', 'right', 'noop']
+        #print(self.legal_actions)
         self.noop = 'pass'
         self.id = actor_id
 
-        self.game = make_game(self.randomness, self.reward_location, self.length)
+        self.game = make_game(False, self.reward_location, False)
         obs_t, r_t, discount_t = self.game.its_showtime()
-        obs_t, info = T_lab_observation(obs_t)
+        obs_t = convert_obs(obs_t)
         self.observation_shape = obs_t.shape
-        
-        
-        self.enlarge = False
-        self.rewards = []
 
 
     def reset(self):
         """Starts a new episode and returns its initial state"""
-        
-        
-        self.game = make_game(self.randomness, self.reward_location, self.length)
+        self.reward_location = np.random.choice([0,1]) #0 if np.random.rand() < 0.5 else 1
+        self.game = make_game(False, self.reward_location, False)
         obs_t, r_t, discount_t = self.game.its_showtime()
-        obs, info = T_lab_observation(obs_t)
-        
+        obs = convert_obs(obs_t)
         
         return obs, None
 
@@ -43,42 +43,23 @@ class TLabyrinthEmulator(BaseEnvironment):
         Returns the next state, reward, and terminal signal
         """
         act = [i for i, x in enumerate(action) if x]
-        
         if not self.game.game_over:
             obs, reward, discount = self.game.play(act[0])
+            if self.visualize:
+                act_names = ['up', 'left', 'right', 'noop']
+                print('action={}, r={}, is_done={}'.format(act_names[act[0]], reward, discount!=1.0))
+                print_obs(obs)
         termination = 1-discount
-        
-        observation, info = T_lab_observation(obs)
-        ls = []
-        #if len(str(self.id)) == 1:
-        data = [[],[]]
-        if self.id != data[0] and reward != -1:
-            data[0].append(self.id)
-            data[1].append(reward)
-           # print(data)
-	       # print("actor, reward, termination", self.id, reward, termination)
-        #if data[0]==[4]: #write to file
-            #print(data)
-        #print(reward, termination)
-         
-	#for active learning
-        #if termination == True: 
-        #    self.rewards.append(reward)
-        #    if len(self.rewards) == 51:
-                #self.rewards = self.rewards[1:]
-        #        print(self.rewards)
-        #        if len(np.where(np.array(self.rewards) > 0)) >= 45:
-                    #print(self.rewards)
-        #            self.length = self.length + 5
-                    #self.enlarge = True
-        #print(self.rewards)
-        return observation, reward, termination, None
+
+        return convert_obs(obs), reward, termination, None
 
 
     def get_legal_actions(self):
+        #self.legal_actions = T_lab_actions().shape
         return self.legal_actions
 
     def get_noop(self):
+        #self.noop = 'pass'
         return self.noop
 
     def on_new_frame(self, frame):
