@@ -9,13 +9,12 @@ from emulators import TLabyrinthCreator
 
 import utils
 import utils.evaluate as evaluate
+from networks import tlab_nets
 #from networks import vizdoom_nets, atari_nets
 from paac import PAACLearner
 from batch_play import ConcurrentBatchEmulator, SequentialBatchEmulator, WorkerProcess
 #import multiprocessing
 
-from networks import tlab_nets
-from paac import PAACLearner
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 FF_HISTORY_WINDOW=4
@@ -134,7 +133,7 @@ def add_paac_args(parser, framework):
                         help="Epsilon for the Rmsprop and Adam optimizers."+show_default, dest="e")
     parser.add_argument('-lr', '--initial_lr', default=1e-3, type=float,
                         help="Initial value for the learning rate."+show_default, dest="initial_lr",)
-    parser.add_argument('-lra', '--lr_annealing_steps', default=1500000, type=int,
+    parser.add_argument('-lra', '--lr_annealing_steps', default=80000000, type=int,
                         help="Nr. of global steps during which the learning rate will be linearly" +
                              "annealed towards zero." + show_default,
                         dest="lr_annealing_steps")
@@ -150,7 +149,7 @@ def add_paac_args(parser, framework):
                          local (layer-wise norm), global (global norm)"""+show_default,
                         dest="clip_norm_type")
     parser.add_argument('--gamma', default=0.99, type=float, help="Discount factor."+show_default, dest="gamma")
-    parser.add_argument('--max_global_steps', default=1500000, type=int,
+    parser.add_argument('--max_global_steps', default=80000000, type=int,
                         help="Number of training steps."+show_default,
                         dest="max_global_steps")
     parser.add_argument('--max_local_steps', default=10, type=int,
@@ -164,8 +163,7 @@ def add_paac_args(parser, framework):
     parser.add_argument('-df', '--debugging_folder', default='logs/', type=str,
                         help="Folder where to save training progress.", dest="debugging_folder")
     parser.add_argument('--arch', choices=net_choices, help="Which network architecture to train"+show_default,
-                        dest="arch")
-
+                        dest="arch", required=True)
     parser.add_argument('--loss_scale', default=5., dest='loss_scaling', type=float,
                         help='Scales loss according to a given value'+show_default )
     parser.add_argument('--critic_coef', default=0.25, dest='critic_coef', type=float,

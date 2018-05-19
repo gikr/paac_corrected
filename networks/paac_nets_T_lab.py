@@ -8,11 +8,12 @@ import numpy as np
 import functools
 from collections import namedtuple
 
-def preprocess_images(s_numpy, t_types, volatile=False):
+def preprocess_images(s_numpy, t_types):
     # pytorch conv layers expect inputs of shape (batch, C,H,W)
     #print(s_numpy)
-    s_numpy = np.ascontiguousarray(s_numpy, dtype=np.float32)  #[0,255] to [-1.,1.]
-    return Variable(t_types.FloatTensor(s_numpy), volatile=volatile)
+    s_numpy = (np.ascontiguousarray(s_numpy, dtype=np.float32))  #[0,255] to [-1.,1.]
+    #print(s_numpy)
+    return Variable(t_types.FloatTensor(s_numpy))
 
 #def old_preprocess_images(s_numpy, t_types, volatile=False):
     # pytorch conv layers expect inputs of shape (batch, C,H,W)
@@ -47,9 +48,7 @@ class TlabFF(nn.Module):
         self.fc_value = nn.Linear(256, 1)
 
     def forward(self, states, infos):
-        volatile = not self.training
-
-        states = self._preprocess(states, self._intypes, volatile)
+        states = self._preprocess(states, self._intypes)
         x = F.relu(self.conv1(states))
         x = F.relu(self.conv2(x))
         x = x.view(x.size()[0], -1)
@@ -78,8 +77,8 @@ class TlabLSTM(nn.Module):
 
     def _create_network(self):
         C,H,W = self._obs_shape
-        self.conv1 = nn.Conv2d(C, 16, (3,3), stride=1, padding=1)
-        self.conv2 = nn.Conv2d(16, 32, (3,3), stride=1, padding=1)
+        self.conv1 = nn.Conv2d(C, 16, (3,3), stride=1, padding = 1)
+        self.conv2 = nn.Conv2d(16, 32, (3,3), stride=1, padding = 1)
 
         convs = [self.conv1, self.conv2]
         C_out, H_out, W_out = calc_output_shape((C, H, W), convs)
@@ -89,8 +88,7 @@ class TlabLSTM(nn.Module):
         self.fc_value = nn.Linear(256, 1)
 
     def forward(self, states, infos, rnn_inputs):
-        volatile = not self.training
-        states = self._preprocess(states, self._intypes, volatile)
+        states = self._preprocess(states, self._intypes)
         x = F.relu(self.conv1(states))
         x = F.relu(self.conv2(x))
         x = x.view(x.size()[0], -1)
@@ -102,11 +100,10 @@ class TlabLSTM(nn.Module):
         Returns initial lstm state as a tuple(hidden_state, cell_state).
         Intial lstm state is supposed to be used at the begging of an episode.
         '''
-        volatile = not self.training
         t_type = self._intypes.FloatTensor
         hx = torch.zeros(batch_size, self.lstm.hidden_size).type(t_type)
         cx = torch.zeros(batch_size, self.lstm.hidden_size).type(t_type)
-        return Variable(hx, volatile=volatile), Variable(cx, volatile=volatile)
+        return Variable(hx), Variable(cx)
 
 tlab_nets = {
     'lstm': TlabLSTM,
@@ -166,9 +163,9 @@ def init_model_weights(module):
 
 
 def calc_output_shape(obs_dims, net_layers):
-    rnd_input = torch.randn(1, *obs_dims)  # batch_size=1
-    x = Variable(rnd_input, volatile=True)
-    for l in net_layers:
-        x = l(x)
-    return x.size()[1:]
-
+    with torch.no_grad():
+        rnd_input = torch.randn(1, *obs_dims)  # batch_size=1
+        x = Variable(rnd_input)
+        for l in net_layers:
+            x = l(x)
+        return x.size()[1:]
