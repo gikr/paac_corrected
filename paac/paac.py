@@ -36,6 +36,7 @@ class PAACLearner(object):
         checkpoint = self._load_latest_checkpoint(self.checkpoint_dir)
         self.last_saving_step = checkpoint['last_step'] if checkpoint else 0
 
+        self.final_rewards = []
         self.global_step = self.last_saving_step
         self.network = network_creator()
         self.batch_env = batch_env
@@ -144,6 +145,7 @@ class PAACLearner(object):
                         hx, cx = hx.clone(), cx.clone() #hx_t, cx_t are used for backward op, so we can't modify them in-place
                         hx[done_idx,:] = hx_init[done_idx, :].detach()
                         cx[done_idx,:] = cx_init[done_idx,:].detach()
+
 
             self.global_step += rollout_steps
             next_v = self.predict_values(states, infos, (hx,cx))

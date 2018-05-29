@@ -53,33 +53,20 @@ HINT_CHR = 'H'
 #GOAL_REWARD = 1
 #HINT_REWARD = 20
 
-def game_art_function(width, length, reward_location):
-    matrix = ['#########',
-              '#L     R#']
-    matrix += [''.join([random.choice(['#', '@']) if i != int(width/2)  else ' ' for i in range(width)]) for j in range(length-4)]
-    matrix += ['#@@# #@@#']
-    matrix += ['+@@# #@@#']
-    matrix += ['#@@# #@@#']
-    if reward_location == 0:
-        matrix += ['#@@# H@@#']
-    else:
-        matrix += ['#@@H #@@#']
-    matrix += ['####A####']
-    return np.asarray(matrix)
 
 
-def make_game(randomness, reward_location, length_lab):
+def make_game(randomness, reward_location, enlarge_game_art):
 
-  if reward_location is None:  # in random case reward location should be None
-       if randomness:
-            # If the agent is in testing mode, randomly choose a Goal location.
-          reward_location = np.random.choice([0, 1])
-       else:
-          reward_location = 0
+  if reward_location is None: #in random case reward location should be None
+      if randomness:
+          # If the agent is in testing mode, randomly choose a Goal location.
 
-  width_lab = 9
+         reward_location = np.random.choice([0, 1])
 
-  game = game_art_function(width_lab, length_lab, reward_location)
+      else:
+         reward_location = 0
+
+  game = GAME_ART[reward_location]
 
 
   scrolly_info = prefab_drapes.Scrolly.PatternInfo(
@@ -212,7 +199,7 @@ def main(argv=()):
 
   # Build a game.
 
-  game = make_game(True, None, 10)
+  game = make_game(False, 0)
 
 
   # Make a CursesUi to play it with.
@@ -249,7 +236,7 @@ def print_obs(obs):
 
 def dummy_episode():
     import numpy as np
-    game = make_game(True, None, 10)
+    game = make_game(True, None, False)
 
     action_keys = ['up', 'left', 'right', 'noop']
 
@@ -300,7 +287,7 @@ def T_lab_observation(obs_t):
 
 def T_lab_actions():
 	action_keys = [0, 1, 2, 3]
-	return action_keys
+	return(np.ndarray(action_keys))
 
 
 if __name__ == '__main__':

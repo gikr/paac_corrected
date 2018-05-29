@@ -12,17 +12,18 @@ def convert_obs(obs):
     return state.astype(np.uint8)
 
 class TLabyrinthEmulator(BaseEnvironment):
-    def __init__(self, actor_id, args):
+    def __init__(self, emulator_id, game, random_seed=3,
+                 random_start=True, single_life_episodes=False,
+                 history_window=1, visualize=False, verbose=0, **unknown):
         self.randomness = True
-        self.reward_location = None
-        self.length = 10
-        self.visualize = getattr(args,'visualize', False)
+        self.reward_location = np.random.choice([0,1]) #0 if np.random.rand() < 0.5 else 1
+        self.visualize = visualize
         self.legal_actions = [0, 1, 2, 3] #['up', 'left', 'right', 'noop']
         #print(self.legal_actions)
         self.noop = 'pass'
-        self.id = actor_id
-
-        self.game = make_game(self.randomness, self.reward_location, self.length)
+        self.id = emulator_id
+        
+        self.game = make_game(False, self.reward_location, False)
         obs_t, r_t, discount_t = self.game.its_showtime()
         obs_t = convert_obs(obs_t)
         self.observation_shape = obs_t.shape
@@ -30,7 +31,8 @@ class TLabyrinthEmulator(BaseEnvironment):
 
     def reset(self):
         """Starts a new episode and returns its initial state"""
-        self.game = make_game(self.randomness, self.reward_location, self.length)
+        self.reward_location = np.random.choice([0,1]) #0 if np.random.rand() < 0.5 else 1
+        self.game = make_game(False, self.reward_location, False)
         obs_t, r_t, discount_t = self.game.its_showtime()
         obs = convert_obs(obs_t)
         
